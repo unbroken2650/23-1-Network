@@ -25,16 +25,15 @@ int main(int argc, char **argv)
 	}
 	else //parent process
 	{
-		printf("child PID %d \n", pid);
-		wait(&status);
+		
+wait(&status);
 		if(WIFEXITED(status))
 		{
 			printf("Child process returns %d \n", WEXITSTATUS(status));
 		}
-		else if(WIFSIGNALED(status))
-		{
-			printf("child process has been terminated by singal");
-		}
+		printf("This is a parent process.\n");
+		printf("Parent Process Count %d \n", count);
+
 	}
 
 	return 0;
