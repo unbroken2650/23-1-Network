@@ -16,6 +16,7 @@ int main(int argc, char** argv)
 	struct sockaddr_in destAddr;
 	socklen_t addrLen;	
 	
+	// 소켓 생성 (IPv4, UDP 프로토콜(전송방식), UDP 프로토콜(프로토콜))
 	mySock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	
 	memset(&destAddr, 0, sizeof(destAddr));	
@@ -26,18 +27,29 @@ int main(int argc, char** argv)
 
 	while(1)
 	{
+		// 키보드 입력받기
 		fgets(buff, BUFSIZ-1, stdin);
  		readLen = strlen(buff);
+
+		// UDP 메시지 전송
 		nSent = sendto(mySock, buff, readLen, 0,
 			(struct sockaddr*) &destAddr, addrLen);
+		
+		// 전송 실패 시 종료
 		if(nSent == -1) errProc("write");
+		
+		// 메시지 수신
 		nRecv = recvfrom(mySock, buff, BUFSIZ-1, 0, 
 			(struct sockaddr*) &destAddr, &addrLen);
+		
+		//수신 실패 시 종료
 		if(nRecv == -1) errProc("read");
 		buff[nRecv] = '\0';
 		printf("Server: %s\n", buff);
 		if(!strcmp(buff,"END")) break;
 	}
+
+	// 통신 종료
 	close(mySock);	
 	return 0;
 }
