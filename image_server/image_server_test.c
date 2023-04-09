@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#define PORT 3000
+#define PORT 8080
 #define BUFSIZE 1024
 
 int main()
@@ -24,14 +24,17 @@ int main()
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
+    {
         printf("socket error");
+    }
 
     memset((char *)&serv_addr, 0, sizeof(serv_addr));
+    portno = PORT;
 
     // 서버 주소 및 포트 할당
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(portno);
 
     // 서버 소켓 바인드
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)))
@@ -44,9 +47,9 @@ int main()
     listen(sockfd, 5);
 
     // 클라이언트 요청 accept
-    int clntAddrLen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clntAddrLen);
-    if (newsockfd == -1)
+    clilen = sizeof(cli_addr);
+    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
+    if (newsockfd < 0)
     {
         printf("Accept Error");
         return -1;
@@ -56,7 +59,9 @@ int main()
     memset(buffer, 0, BUFSIZE);
     n = read(newsockfd, buffer, BUFSIZE);
     if (n < 0)
+    {
         printf("ERROR reading from socket");
+    }
 
     // 파일 오픈 + rb:2진 파일 읽기 모드
     fp = fopen("image.jpg", "rb");
@@ -70,6 +75,7 @@ int main()
     if (stat("image.jpg", &st) == -1)
     {
         printf("File Read error: %s\n", strerror(errno));
+        fclose(fp);
         return -1;
     }
     else
@@ -83,11 +89,18 @@ int main()
     if (file_buffer == NULL)
     {
         printf("Memory allocation error");
+        fclose(fp);
         return -1;
     }
 
     // 파일 읽기
-    fread(file_buffer, 1, file_size, fp);
+    if (fread(file_buffer, file_size, 1, fp) != 1)
+    {
+        printf("File Read error");
+        fclose(fp);
+        free(file_buffer);
+        return -1;
+    }
 
     // http header 만들기
     sprintf(http_header, "HTTP/1.1 200 OK\r\n"
@@ -99,12 +112,12 @@ int main()
 
     // http header 전송
 
-    if (write(newsockfd, http_header, strlen(http_header) + 1) < 0)
+    if (write(newsockfd, http_header, strlen(http_header)) < 0)
     {
         printf("Header write error");
         fclose(fp);
-    free(file_buffer);
-    return -1;
+        free(file_buffer);
+        return -1;
     };
 
     // http body 전송
