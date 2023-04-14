@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 	int status;
 	pid_t pid = fork();
 
-	if(pid == 0) //child process 
+	if (pid == 0) // child process
 	{
 		printf("A child process is generated.\n");
 		count = count + 1;
@@ -18,22 +18,22 @@ int main(int argc, char **argv)
 		sleep(15);
 		return 3;
 	}
-	else if(pid < 0) //fork error
+	else if (pid < 0) // fork error
 	{
 		printf("Fork Error\n");
 		exit(5);
 	}
-	else //parent process
+	else // parent process
 	{
 		printf("child PID %d \n", pid);
 		wait(&status);
-		if(WIFEXITED(status))
+		if (WIFEXITED(status))
 		{
 			printf("Child process returns %d \n", WEXITSTATUS(status));
 		}
-		else if(WIFSIGNALED(status))
+		else if (WIFSIGNALED(status))
 		{
-			printf("child process has been terminated by singal");
+			printf("Child process has been terminated by signal\n");
 		}
 	}
 
