@@ -35,15 +35,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Remote address is: ");
-    char address_buffer[100];
-    char service_buffer[100];
-
-    // 주소 정보를 인간이 읽을 수 있는 형식으로 변환
-    getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen, address_buffer, sizeof(address_buffer), service_buffer, sizeof(service_buffer), NI_NUMERICHOST);
-
-    printf("%s %s\n", address_buffer, service_buffer);
-
     printf("Creating Socket...\n");
     SOCKET socket_peer;
 
@@ -91,15 +82,13 @@ int main(int argc, char *argv[]) {
                 printf("Connection closed by peer.\n");
                 break;
             }
-            printf("Received Data (%d bytes): %.*s", bytes_received, bytes_received, read);
+            printf("%.*s", bytes_received, read);
         }
 
         if (FD_ISSET(0, &reads)) {
             char read[4096];
             if (!fgets(read, 4096, stdin)) break;
-            printf("Sending: %s", read);
-            int bytes_sent = send(socket_peer, read, strlen(read), 0);
-            printf("Sent %d bytes.\n", bytes_sent);
+            send(socket_peer, read, strlen(read), 0);
         }
     }  // end while(1)
 

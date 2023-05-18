@@ -91,27 +91,36 @@ int main() {
 
                     char address_buffer[100];
                     getnameinfo((struct sockaddr *)&client_address, client_len, address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
-                    printf("Client %d joined the chat\n", socket_client - 4);
+
+                    printf("Client %d joined the chat\n", socket_client - 3);
 
                 } else {
                     char read[1024];
                     int bytes_received = recv(i, read, 1024, 0);
 
                     // 데이터 수신
-                    if (bytes_received < 1 || read == "EXIT") {
+                    if (bytes_received < 1) {
                         FD_CLR(i, &master);
                         CLOSESOCKET(i);
-                        printf("Client %d exited the chat\n", i - 4);
+                        printf("Client %d exited the chat\n", i - 3);
                         continue;
                     }
 
                     SOCKET j;
                     for (j = 1; j <= max_socket; ++j) {
                         if (FD_ISSET(j, &master)) {
-                            if (j == socket_listen || j == i)
+                            if (j == socket_listen)
                                 continue;
-                            else
+                            else {
+                                char message[1034] = {0};
+                                char client_str[10];
+                                sprintf(client_str, "%d", i - 3);
+                                strcat(message, "Client ");
+                                strcat(message, client_str);
+                                strcat(message, ": ");
+                                send(j, message, strlen(message), 0);
                                 send(j, read, bytes_received, 0);
+                            }
                         }
                     }
                 }
