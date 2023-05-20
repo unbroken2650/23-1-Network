@@ -92,24 +92,57 @@ int main() {
                     char address_buffer[100];
                     getnameinfo((struct sockaddr *)&client_address, client_len, address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
 
+                    // 클라이언트 접속 알림
                     printf("Client %d joined the chat\n", socket_client - 3);
+                    for (int j = 1; j <= max_socket; ++j) {
+                        if (FD_ISSET(j, &master)) {
+                            if (j == socket_listen)
+                                continue;
+                            else {
+                                char message[1034] = {0};
+                                char client_str[10];
+                                sprintf(client_str, "%d", socket_client - 3);
+                                strcat(message, "Client ");
+                                strcat(message, client_str);
+                                strcat(message, " joined the chat\n");
+                                send(j, message, strlen(message), 0);
+                            }
+                        }
+                    }
 
                 } else {
+                    // 데이터 수신
                     char read[1024];
                     int bytes_received = recv(i, read, 1024, 0);
 
-                    // 데이터 수신
+                    // 클라이언트 퇴장 알림
                     if (bytes_received < 1) {
                         FD_CLR(i, &master);
                         CLOSESOCKET(i);
                         printf("Client %d exited the chat\n", i - 3);
+                        for (int j = 1; j <= max_socket; ++j) {
+                            if (FD_ISSET(j, &master)) {
+                                if (j == socket_listen)
+                                    continue;
+                                else {
+                                    char message[1034] = {0};
+                                    char client_str[10];
+                                    sprintf(client_str, "%d", i - 3);
+                                    strcat(message, "Client ");
+                                    strcat(message, client_str);
+                                    strcat(message, " exited the chat\n");
+                                    send(j, message, strlen(message), 0);
+                                }
+                            }
+                        }
                         continue;
                     }
 
+                    // 메시지 전송
                     SOCKET j;
                     for (j = 1; j <= max_socket; ++j) {
                         if (FD_ISSET(j, &master)) {
-                            if (j == socket_listen)
+                            if (j == socket_listen)  // 채팅 서버의 소켓 제외
                                 continue;
                             else {
                                 char message[1034] = {0};
